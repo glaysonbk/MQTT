@@ -88,3 +88,46 @@ client.connect("mqtt.eclipseprojects.io")
 # Metodo que gerencia a conexao com o broker: processa o trafego de rede,
 # dispara as chamadas das funcoes de callback e trata dos processos de reconexao
 client.loop_forever()
+
+------ End
+
+# Import dos pacotes
+import pandas as pd
+import time
+import paho.mqtt.client as mqtt
+
+# Criacao de um DataFrame para coleta de dados
+df_clients = pd.DataFrame(columns = ['dt', 'clients_alt'])
+
+
+# Funcao ativada (callback) quando o client recebe a confirmacao de conexao
+# com o broker (CONNACK).
+def on_connect(client, userdata, flags, rc):    
+    print("Conectado com o resultado código " + str(rc))
+    client.subscribe("paho/test/mack")
+
+
+# Funcao ativada (callback) quando uma mensagem publicada e recebida pelo
+# cliente
+def on_message(client, userdata, msg):
+    
+    global df_clients
+    
+    df_clients = df_clients.append({'dt' : time.strftime("%D %H:%M:%S"), 
+                                    'clients_alt' : int(msg.payload)},
+                                    ignore_index=True)
+    
+    print(df_clients)
+     
+
+# Cricacao do objeto client do mqtt e definicao das funcoes de callback
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+
+# Conexao com o broker
+client.connect("mqtt.eclipseprojects.io")
+
+# Metodo que gerencia a conexao com o broker: processa o trafego de rede,
+# dispara as chamadas das funcoes de callback e trata dos processos de reconexao
+client.loop_forever()
